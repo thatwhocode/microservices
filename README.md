@@ -75,10 +75,10 @@ Create a secrets/ folder in the root directory. This folder is gitignored for se
     mkdir secrets
 ```    
 Example command to generate a secret:
-    ```bash
+```bash
         echo -n "super_secure_password" > secrets/postgres_auth_password.txt
         echo -n "my_jwt_secret" > secrets/jwt_secret_key.txt
-    ```
+```
 Run with Docker Compose
 ```bash 
 docker-compose up -d --build
