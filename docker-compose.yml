@@ -1,0 +1,120 @@
+services:
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U $$(cat /run/secrets/postgres_auth_login) -d $$(cat /run/secrets/postgres_auth_db_name)'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_auth_login
+      POSTGRES_HOST: /run/secrets/postgres_auth_host_name
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_auth_password
+      POSTGRES_DB_FILE : /run/secrets/postgres_auth_db_name
+    secrets:
+    - postgres_auth_db_name
+    - postgres_auth_login
+    - postgres_auth_password
+    - postgres_auth_host_name
+    ports:
+     - "5432:5432"
+    volumes:
+     - postgres_data:/var/lib/postgresql/data
+     - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+  api:
+    build:
+      context: .
+      dockerfile: auth_service/Dockerfile
+    container_name: auth_cont
+    depends_on:
+     db:
+       condition: service_healthy
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_auth_login
+      POSTGRES_HOST_FILE: /run/secrets/postgres_auth_host_name
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_auth_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_auth_db_name
+      PYTHONPATH: /app
+      SECRET_KEY_FILE: /run/secrets/jwt_secret
+    secrets:
+     - postgres_auth_db_name
+     - postgres_auth_login
+     - postgres_auth_password
+     - postgres_auth_host_name
+     - jwt_secret
+    ports:
+     - 8000:8000
+    volumes:
+     - .:/app
+  chat_db:
+    image: postgres:13
+    container_name: chat_db
+    healthcheck:
+      test : ["CMD-SHELL", "sh -c 'pg_isready -U $$(cat /run/secrets/postgres_chat_login) -d $$(cat /run/secrets/postgres_chat_db_name)'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_chat_login
+      POSTGRES_HOST_FILE: /run/secrets/postgres_chat_host_name
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_chat_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_chat_db_name
+    secrets:
+     - postgres_chat_db_name
+     - postgres_chat_login
+     - postgres_chat_password
+     - postgres_chat_host_name
+    ports:
+    - "5433:5432"
+    volumes:
+     - postgres_chat_data:/var/lib/postgresql/data
+     - ./scripts/init_chat_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+  chat:
+    build:
+      context: .
+      dockerfile: chat_service/Dockerfile
+    depends_on:
+      chat_db:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_chat_login
+      POSTGRES_HOST_FILE: /run/secrets/postgres_chat_host_name
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_chat_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_chat_db_name
+      SECRET_KEY_FILE: /run/secrets/jwt_secret
+      PYTHONPATH: /app
+    secrets:
+     - postgres_chat_db_name
+     - postgres_chat_password
+     - postgres_chat_host_name
+     - postgres_chat_login
+     - jwt_secret
+    ports:
+     - 8001:8000
+    volumes:
+     - .:/app
+secrets:
+  postgres_auth_db_name:
+    file: ./secrets/postgres_auth_db_name.txt
+  postgres_auth_login:
+    file: ./secrets/postgres_auth_login.txt
+  postgres_auth_password:
+    file: ./secrets/postgres_auth_password.txt
+  postgres_auth_host_name:
+    file: ./secrets/postgres_auth_host_name.txt
+  postgres_chat_db_name:
+    file: ./secrets/postgres_chat_db_name.txt
+  postgres_chat_login:
+    file: ./secrets/postgres_chat_login.txt
+  postgres_chat_password:
+    file: ./secrets/postgres_chat_password.txt
+  postgres_chat_host_name:
+    file: ./secrets/postgres_chat_host_name.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret_key.txt
+volumes:
+  postgres_data:
+  postgres_chat_data:
