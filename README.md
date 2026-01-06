@@ -13,6 +13,9 @@ This project demonstrates the transition from monolithic architecture to a distr
 ---
 
 ## 🏗 Architecture & Design
+![Architecture Diagram](docs/architecture.png)
+![Decompose Diagram](docs/decompose.png)
+
 
 The system is designed using **IDEF0** and **IDEF3** methodologies to ensure logical data flow and process separation.
 
