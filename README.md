@@ -91,10 +91,10 @@ Apply Migrations
 Initialize the database tables for both services
 ```bash 
 # Apply Auth Service migrations
-docker-compose exec api alembic upgrade head
+docker-compose exec api -c auth_service/alembic.ini upgrade head
 
 # Apply Chat Service migrations
-docker-compose exec chat alembic upgrade head
+docker-compose exec chat -c chat_servicer/alembic.ini  upgrade head
 ```
 Roadmap
 

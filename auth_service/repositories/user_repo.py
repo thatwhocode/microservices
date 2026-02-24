@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from auth_service.db.models.user  import User
 from auth_service.schemas.user import UserBase
+from uuid import UUID
 class UserRepository():
     def __init__(self, session:AsyncSession ) -> User | None:
         self.session = session
@@ -26,3 +27,7 @@ class UserRepository():
         await self.session.commit()
         await self.session.refresh(new_user)
         return new_user
+    async def find_user_by_id(self, user_id : UUID)-> UserBase:
+        query = select(User).where(User.id == user_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()

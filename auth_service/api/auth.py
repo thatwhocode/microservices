@@ -14,7 +14,7 @@ async def register(user_data : UserCreate, deps : Dependencies =  Depends(Depend
     result = await deps.auth_service.register_user(user_data=user_data)
     return result
 
-@router.post("/token", response_model=TokenPayload)
+@router.post("/token", response_model=Token)
 async def login_for_access_token(form_data : Annotated[OAuth2PasswordRequestForm, Depends()], deps : Dependencies = Depends(Dependencies)):
     result = await deps.auth_service.login(
         username=form_data.username,

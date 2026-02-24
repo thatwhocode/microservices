@@ -27,27 +27,26 @@ class AuthService:
     
     async def login(self, username : str, password : str) -> Token:
         user  = await self.user_repo.find_username(username=username)
-        is_valid = verify_password(password, user.hashed_password)
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                  detail="wrong login or password")
-        access_token = create_access_token(data={"sub": str(user.username)})
-        return {"access_token": access_token, "token_type" : "bearer"}
+        access_token = create_access_token(data={"sub": str(user.id)})
+        return {"access_token": access_token, "token_type" : "bearer", "username": user.username, "user_id":str(user.id) }
     
     async def get_current_user_from_token(self, token:str) -> User:
-        credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,\
+        credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                                detail="Couldn`t verify credentials",
-                                               headers="WWW-Authenticate: Bearer")
+                                               headers={"WWW-Authenticate: Bearer"})
         try:
             payload = decode(
                 token,
                 settings.SECRET_KEY,
                 algorithms=[settings.ALGORITHM]
             )
-            username : str = payload.get("sub")
+            user_id : str = payload.get("sub")
         except InvalidTokenError:
             raise credentials_exception
-        user = await self.user_repo.find_username(username)
+        user = await self.user_repo.find_user_by_id(user_id)
         if user is None:
             raise credentials_exception
         return user

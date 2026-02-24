@@ -12,6 +12,7 @@ router = APIRouter()
 async def create_message(msg: MessageCreate,
                         user_id : Annotated[UUID, Depends(get_current_user_id)],
                           db : AsyncSession = Depends(get_db)):
+    print("Hello world")
     new_message = Message(
         sender_id = user_id,
         content = msg.content
